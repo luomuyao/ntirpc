@@ -190,16 +190,15 @@ xdr_ioq_uv_recycle(struct poolq_head *ioqh, struct poolq_entry *have)
 void
 xdr_ioq_uv_release(struct xdr_ioq_uv *uv)
 {
-	if (uv->u.uio_refer) {
-		/* not optional in this case! */
-		uv->u.uio_refer->uio_release(uv->u.uio_refer, UIO_FLAG_NONE);
-		uv->u.uio_refer = NULL;
-	}
-
 	if (!(--uv->u.uio_references)) {
 		if (uv->u.uio_release) {
 			/* handle both xdr_ioq_uv and vio */
 			uv->u.uio_release(&uv->u, UIO_FLAG_NONE);
+		} else if (uv->u.uio_flags & UIO_FLAG_REFER) {
+			/* not optional in this case! */
+			uv->u.uio_refer->uio_release(uv->u.uio_refer,
+						     UIO_FLAG_NONE);
+			mem_free(uv, sizeof(*uv));
 		} else if (uv->u.uio_flags & UIO_FLAG_FREE) {
 			free_buffer(uv->v.vio_base, ioquv_size(uv));
 			mem_free(uv, sizeof(*uv));
@@ -590,9 +589,15 @@ xdr_ioq_putbufs(XDR *xdrs, xdr_uio *uio, u_int flags)
 			xdr_ioq_uv_update(XIOQ(xdrs), uv);
 
 		v = &(uio->uio_vio[ix]);
-		uv->u.uio_flags = UIO_FLAG_NONE; /* !RECLAIM */
+		uv->u.uio_flags = UIO_FLAG_REFER;
 		uv->v = *v;
 
+		/* save original buffer sequence for rele */
+		uv->u.uio_refer = uio;
+		(uio->uio_references)++;
+	}
+
+	return (TRUE);
 #if 0
 Saved for later golden buttery results -- Matt
 	if (flags & XDR_PUTBUFS_FLAG_BRELE) {
@@ -624,7 +629,6 @@ Saved for later golden buttery results -- Matt
 			uv->v.vio_head = 0;
 		}
 	}
-#endif
 		/* save original buffer sequence for rele */
 		if (ix == 0) {
 			uv->u.uio_refer = uio;
@@ -633,6 +637,7 @@ Saved for later golden buttery results -- Matt
 	}
 
 	return (TRUE);
+#endif
 }
 
 /*
