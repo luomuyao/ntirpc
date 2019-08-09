@@ -196,6 +196,7 @@ xdr_ioq_uv_release(struct xdr_ioq_uv *uv)
 			uv->u.uio_release(&uv->u, UIO_FLAG_NONE);
 		} else if (uv->u.uio_flags & UIO_FLAG_REFER) {
 			/* not optional in this case! */
+			__warnx(TIRPC_DEBUG_FLAG_XDR, "Call uio_release");
 			uv->u.uio_refer->uio_release(uv->u.uio_refer,
 						     UIO_FLAG_NONE);
 			mem_free(uv, sizeof(*uv));
