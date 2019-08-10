@@ -152,10 +152,10 @@ svc_override_ops(struct xp_ops *ops, SVCXPRT *rendezvous)
 }
 
 /* in svc_rqst.c */
-int svc_rqst_rearm_events(SVCXPRT *);
+int svc_rqst_rearm_events(SVCXPRT *, uint16_t);
 int svc_rqst_xprt_register(SVCXPRT *, SVCXPRT *);
 void svc_rqst_xprt_unregister(SVCXPRT *, uint32_t);
-int svc_rqst_evchan_write(SVCXPRT *, struct xdr_ioq *);
+int svc_rqst_evchan_write(SVCXPRT *, struct xdr_ioq *, bool);
 void svc_rqst_xprt_send_complete(SVCXPRT *);
 
 #endif				/* TIRPC_SVC_INTERNAL_H */

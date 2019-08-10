@@ -298,11 +298,13 @@ void svc_ioq_write(SVCXPRT *xprt)
 
 	while (have != NULL) {
 		int rc = 0;
-
 		/* Process the xioq from the head of the xprt queue */
 		mutex_unlock(&rec->writeq.qmutex);
 
 		xioq = _IOQ(have);
+
+		/* Save has blocked before state */
+		bool has_blocked = xioq->has_blocked;
 
 		/* do i/o unlocked */
 		if (svc_work_pool.params.thrd_max
@@ -329,7 +331,7 @@ void svc_ioq_write(SVCXPRT *xprt)
 				"%s: %p fd %d EWOULDBLOCK",
 				__func__, xprt, xprt->xp_fd);
 			/* Add to epoll and stop processing this xprt's queue */
-			svc_rqst_evchan_write(xprt, xioq);
+			svc_rqst_evchan_write(xprt, xioq, has_blocked);
 			break;
 		} else if (xioq->has_blocked) {
 			__warnx(TIRPC_DEBUG_FLAG_SVC_VC,
