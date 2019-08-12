@@ -149,8 +149,8 @@ rpc_call(const char *host,	/* host name */
 		rcp->versnum = versnum;
 		if ((strlen(host) < (size_t) MAXHOSTNAMELEN)
 		    && (strlen(nettype) < (size_t) NETIDLEN)) {
-			(void)strcpy(rcp->host, host);
-			(void)strcpy(rcp->nettype, nettype);
+			(void)strlcpy(rcp->host, host, sizeof(rcp->host));
+			(void)strlcpy(rcp->nettype, nettype, sizeof(rcp->nettype);
 			rcp->valid = 1;
 		} else {
 			rcp->valid = 0;
